@@ -16,6 +16,7 @@ public class ChatClient {
         this.controller = controller;
     }
 
+
     public void openConnection() throws IOException {
         socket = new Socket("localhost", 8999);
         in = new DataInputStream(socket.getInputStream());

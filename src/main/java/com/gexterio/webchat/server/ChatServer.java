@@ -10,6 +10,7 @@ import java.util.List;
 
 public class ChatServer {
 
+
     private final List<ClientHandler> clients;
 
     public ChatServer() {

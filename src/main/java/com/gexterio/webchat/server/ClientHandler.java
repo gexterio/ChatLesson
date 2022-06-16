@@ -16,6 +16,7 @@ public class ClientHandler {
     private String nick;
     private AuthService authService;
 
+
     public ClientHandler(Socket socket, ChatServer server, AuthService authService) {
         try {
             this.socket = socket;

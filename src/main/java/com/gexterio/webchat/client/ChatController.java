@@ -65,6 +65,7 @@ public class ChatController {
         }
     }
 
+
     public void clickSendBtn(ActionEvent actionEvent) {
         final String message = messageField.getText();
         if (message.isBlank()) {
