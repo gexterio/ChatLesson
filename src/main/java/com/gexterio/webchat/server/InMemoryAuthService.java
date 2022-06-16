@@ -32,6 +32,7 @@ public class InMemoryAuthService implements AuthService {
 
     private List<UserData> users;
 
+
     public InMemoryAuthService() {
         users = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
