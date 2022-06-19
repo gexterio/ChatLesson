@@ -10,6 +10,7 @@
 
 
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ListView?>
 <VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.gexterio.webchat.client.ChatController">
     <padding>
@@ -21,12 +22,18 @@
             <PasswordField fx:id="passField" promptText="password"/>
             <Button text="Sign in" onAction="#signinBtnClick"/>
         </HBox>
-        <VBox fx:id="messageBox" visible="false">
+        <HBox fx:id="messageBox" visible="false">
+            <VBox>
             <TextArea fx:id="messageArea" editable="false" VBox.vgrow="ALWAYS"/>
             <HBox spacing="20">
                 <TextField fx:id="messageField" HBox.hgrow="ALWAYS" promptText="enter your numbers"/>
                 <Button text="Send" defaultButton="true" onAction="#clickSendBtn"/>
             </HBox>
-        </VBox>
+            </VBox>
+            <VBox>
+                <Button text="Exit" onAction="#signOutClick" />
+            <ListView fx:id="clientList" minWidth="200" maxWidth="200" onMouseClicked="#selectClient"/>
+            </VBox>
+        </HBox>
     </VBox>
 </VBox>
