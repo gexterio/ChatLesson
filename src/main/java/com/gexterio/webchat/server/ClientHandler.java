@@ -1,12 +1,14 @@
 package com.gexterio.webchat.server;
 
-import com.gexterio.webchat.client.ChatController;
-import javafx.scene.control.Alert;
+import com.gexterio.webchat.Command;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
+
+import static com.gexterio.webchat.Command.*;
 
 public class ClientHandler {
     private Socket socket;
@@ -35,59 +37,66 @@ public class ClientHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private void authenticate() {
         while (true) {
             try {
                 final String message = in.readUTF();
-                if (message.startsWith("/auth")) {
-                    final String[] split = message.split("\\p{Blank}+");
-                    final String login = split[1];
-                    final String password = split[2];
-                    final String nick = authService.getNickByLoginAndPassword(login, password);
-                    if (nick !=null) {
-                        if (server.isNickBusy(nick)) {
-                            sendMessage("Пользователь уже авторизован");
+                if (Command.isCommand(message)) {
+                    Command command = Command.getCommand(message);
+                    if (command == AUTH) {
+                        final String[] params = command.parse(message);
+                        String login = params[0];
+                        String password = params[1];
+                        final String nick = authService.
+                                getNickByLoginAndPassword(login, password);
+                        if (nick != null) {
+                            if (server.isNickBusy(nick)) {
+                                sendMessage(ERROR, "Пользователь уже авторизован");
+                                continue;
+                            }
+                            sendMessage(AUTHOK, nick);
+                            this.nick = nick;
+                            server.broadcast(MESSAGE, "Пользователь " + nick + " зашел в чат");
+                            server.subscribe(this);
+                            break;
+                        } else {
+                            sendMessage(ERROR, "Неверные логин и пароль");
                         }
-                        sendMessage("/authok " + nick);
-                        this.nick = nick;
-                        server.broadcast("Пользователь " + nick + " зашел в чат");
-                        server.subscribe(this);
-                        break;
-                    } else {
-                        sendMessage("Неверные логин и пароль");
                     }
                 }
-
-            } catch (IOException e) {
+            }  catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
+
 
 
     private void readMessages() {
         while (true) {
             try {
-
-                String message = in.readUTF();
-                if ("/end".equals(message)) {
+                final String message = in.readUTF();
+                final Command command = getCommand(message);
+                if (command == Command.END) {
                     break;
                 }
-                if (message.startsWith("/w")) {
-                    server.directMsg(nick + " " + message);
-                } else {
-                    server.broadcast(nick + " " + message);
+                if(command == PRIVATE_MESSAGE) {
+                   final String[] params = command.parse(message);
+                    String msg = params[1];
+                    String nick = params[0];
+                    server.sendPrivateMessage(this, nick, msg);
+                   continue;
                 }
+                server.broadcast(MESSAGE,nick + ": " + command.parse(message)[0]);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public void sendMessage(String message) {
+    private void sendMessage(String message) {
         try {
             out.writeUTF(message);
         } catch (IOException e) {
@@ -96,7 +105,7 @@ public class ClientHandler {
     }
 
     private void closeConnection() {
-        sendMessage("/end");
+        sendMessage(Command.END);
         if (in != null) {
             try {
                 in.close();
@@ -119,6 +128,10 @@ public class ClientHandler {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void sendMessage(Command command, String... params) {
+        sendMessage(command.collectMessage(params));
     }
 
     public String getNick() {
