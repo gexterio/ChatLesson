@@ -15,8 +15,8 @@ public class ChatClient {
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
-
     private final ChatController controller;
+    private boolean isAuth;
 
     public ChatClient(ChatController controller) {
         this.controller = controller;
@@ -41,12 +41,14 @@ public class ChatClient {
     }
 
     private void waitAuth() throws IOException {
-        while (true) {
-            final String message = in.readUTF();
 
+        while (true) {
+            runTimer(120);
+            final String message = in.readUTF();
             Command command = Command.getCommand(message);
             String[] params = command.parse(message);
             if (command == AUTHOK) {
+                isAuth = true;
                 final String nick = params[0];
                 controller.setAuth(true);
                 controller.addMessage("Успешная авторизация под ником " + nick);
@@ -56,8 +58,29 @@ public class ChatClient {
                 Platform.runLater(() -> controller.showError(params[0]));
                 continue;
             }
-
         }
+    }
+
+    private void runTimer(int maxSec) {
+        new Thread (() -> {
+            int timer = maxSec;
+            while (timer>0) {
+                try {
+                    Thread.sleep(1000);
+                    timer--;
+                    System.out.println(timer);
+                    if (isAuth) {
+                        break;
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (!isAuth) {
+               closeConnection();
+
+            }
+        }).start();
     }
 
     private void readMessages() throws IOException {

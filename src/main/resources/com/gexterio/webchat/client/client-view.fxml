@@ -11,6 +11,7 @@
 
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Label?>
 <VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.gexterio.webchat.client.ChatController">
     <padding>
@@ -21,6 +22,7 @@
             <TextField fx:id="loginField" promptText="login"/>
             <PasswordField fx:id="passField" promptText="password"/>
             <Button text="Sign in" onAction="#signinBtnClick"/>
+            <Label fx:id="timer" maxWidth="60" minWidth="40" text="120"/>
         </HBox>
         <HBox fx:id="messageBox" visible="false">
             <VBox>

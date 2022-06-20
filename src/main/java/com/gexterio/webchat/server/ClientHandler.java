@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 
 import static com.gexterio.webchat.Command.*;
 
@@ -65,11 +66,13 @@ public class ClientHandler {
                         }
                     }
                 }
-            } catch (IOException e) {
+            }  catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
+
+
 
     private void readMessages() {
         while (true) {
