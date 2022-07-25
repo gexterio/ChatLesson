@@ -1,20 +1,21 @@
 package com.gexterio.webchat.server;
 
-import com.gexterio.webchat.client.ChatController;
+import com.gexterio.webchat.Command;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ChatServer {
 
 
-    private final List<ClientHandler> clients;
+    private final Map<String, ClientHandler> clients;
 
     public ChatServer() {
-        this.clients = new ArrayList<>();
+        this.clients = new HashMap<>();
 
     }
 
@@ -33,37 +34,47 @@ public class ChatServer {
     }
 
     public void broadcast(String message) {
-        for (ClientHandler client : clients) {
-            client.sendMessage(message);
+        for (ClientHandler client : clients.values()) {
+            client.sendMessage(Command.MESSAGE, message);
         }
     }
 
-    public void directMsg(String message) {
-        String[] split = message.split("\\p{Blank}+");
-        String nick = split[2];
-
-
-        for(ClientHandler client : clients) {
-            if (nick.equals(client.getNick())) {
-                client.sendMessage(message);
-            }
-        }
-    }
+//
 
     public void subscribe(ClientHandler client) {
-        clients.add(client);
+        clients.put(client.getNick(), client);
+        broadcastClientsList();
+    }
+
+    private void broadcastClientsList() {
+        final String nicks = clients.values().stream()
+                .map(ClientHandler::getNick)
+                .collect(Collectors.joining(" "));
+        broadcast(Command.CLIENTS, nicks);
+    }
+
+    public void broadcast(Command command, String message) {
+        for (ClientHandler client : clients.values()) {
+            client.sendMessage(command, message);
+        }
     }
 
     public boolean isNickBusy(String nick) {
-        for (ClientHandler client : clients) {
-            if (nick.equals(client.getNick())) {
-                return true;
-            }
-        }
-        return false;
+        return clients.get(nick) != null;
     }
 
     public void unsubscribe(ClientHandler client) {
-        clients.remove(client);
+        clients.remove(client.getNick());
+        broadcastClientsList();
+    }
+
+    public void sendPrivateMessage(ClientHandler from, String nickTo, String msg) {
+        ClientHandler clientTo = clients.get(nickTo);
+        if (clientTo == null) {
+            from.sendMessage(Command.ERROR, "Пользователь не авторизован");
+            return;
+        }
+        clientTo.sendMessage(Command.MESSAGE, "От "+ from.getNick() + ": " + msg);
+        from.sendMessage(Command.MESSAGE, "Участнику " + nickTo + ": " + msg);
     }
 }
