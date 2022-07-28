@@ -1,19 +1,15 @@
 package com.gexterio.webchat.client;
 
 import com.gexterio.webchat.Command;
-
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-
 import java.io.IOException;
 import java.util.Optional;
 
 public class ChatController {
-    @FXML
-    private Label timer;
+
     @FXML
     private ListView<String> clientList;
     @FXML
@@ -61,7 +57,7 @@ public class ChatController {
         }
     }
 
-    public void clickSendBtn(ActionEvent actionEvent) {
+    public void clickSendBtn() {
         final String message = messageField.getText();
         if (message.isBlank()) {
             return;
@@ -84,7 +80,7 @@ public class ChatController {
         messageBox.setVisible(success);
     }
 
-    public void signinBtnClick() {
+    public void signInBtnClick() {
         client.sendMessage(Command.AUTH, loginField.getText(), passField.getText());
 
     }
